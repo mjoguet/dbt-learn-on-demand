@@ -1,0 +1,51 @@
+version: 2
+
+sources:
+  - name: jaffle_shop
+    description: extract excel d'une base Postgres
+    database: dbt
+    tables:
+      - name: customers
+        description: données raw customers
+        columns: 
+          - name: id
+            description: clé primaire des clients
+            tests:
+             - unique
+             - not_null
+      - name: orders
+        description: données raw orders
+        columns: 
+          - name: id
+            description: clé primaire des commandes
+            tests:
+             - unique
+             - not_null
+
+models:
+  - name: stage_customers
+    description: un client unique par ligne 
+    columns: 
+      - name: customer_id
+        description: clé primaire du client
+        tests:
+          - unique
+          - not_null
+
+  - name: stage_orders
+    columns: 
+      - name: status
+        description: '{{ doc("order_status")}}'
+        tests:
+          - accepted_values:
+              values: ['completed','shipped','returned','placed','return_pending']
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('stage_customers')
+              field: customer_id
+
